@@ -3,7 +3,12 @@ const sequelize = require('../../db.js');
 const Product = require('./Product'); // Importa el modelo Product
 
 const Category = sequelize.define('Category', {
-    // Define tus campos aquí
+  name: {
+      type: DataTypes.STRING,
+      allowNull: false
+  }
+}, {
+  paranoid: true
 });
 
 module.exports = Category;
