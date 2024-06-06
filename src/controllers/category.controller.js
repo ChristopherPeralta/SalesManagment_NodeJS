@@ -76,3 +76,15 @@ exports.restoreCategory = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+exports.getDeletedCategories = async (req, res) => {
+    try {
+        const categories = await Category.findAll({ 
+            paranoid: false 
+        });
+        const deletedCategories = categories.filter(category => category.deletedAt);
+        res.json(deletedCategories);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
