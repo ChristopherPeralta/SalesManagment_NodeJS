@@ -143,3 +143,26 @@ exports.getDeletedProducts = async (req, res) => {
     }
 };
 
+exports.findByDeletedCategory = async (req, res) => {
+    try {
+        const products = await Product.findAll({
+            include: [{
+                model: Category,
+                as: 'category',
+                required: false
+            }],
+            where: { '$category.id$': null },
+            attributes: ['id', 'name', 'price', 'stock', 'createdAt', 'updatedAt', 'deletedAt']
+        });
+
+        if (products.length === 0) {
+            return res.status(404).json({ message: 'No se encontraron productos con categoría eliminada' });
+        }
+
+        res.json(products);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al obtener los productos con categoría eliminada', error: error.message });
+    }
+};
+
