@@ -1,5 +1,5 @@
-Tecnoligas:
-nodeJS
-express
-mysql
-sequelize
+# Tecnologías:
+- nodeJS
+- express
+- mysql
+- sequelize
