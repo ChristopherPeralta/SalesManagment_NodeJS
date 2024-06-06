@@ -52,7 +52,7 @@ exports.getAllPurchases = async (req, res) => {
             await product.increment('stock', { by: detail.quantity, transaction: t });
           }
         }
-
+//
         await DetailPurchase.bulkCreate(details, { transaction: t });
 
         return newPurchase;
