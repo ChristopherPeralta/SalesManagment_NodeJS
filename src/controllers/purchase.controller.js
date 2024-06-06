@@ -1,6 +1,7 @@
 const sequelize = require('../../db.js');
 const Purchase = require('../models/purchase.model.js');
 const DetailPurchase = require('../models/detailPurchase.model.js');
+const Product = require('../models/product.model');
 
 exports.getAllPurchases = async (req, res) => {
     try {
@@ -43,6 +44,14 @@ exports.getAllPurchases = async (req, res) => {
           quantity: product.quantity,
           price: product.price,
         }));
+
+        //Actualiza el stock del producto segun la cantidad comprada
+        for (const detail of details) {
+          const product = await Product.findByPk(detail.productId, { transaction: t });
+          if (product) {
+            await product.increment('stock', { by: detail.quantity, transaction: t });
+          }
+        }
 
         await DetailPurchase.bulkCreate(details, { transaction: t });
 
