@@ -32,4 +32,5 @@ const Product = sequelize.define('Product', {
     paranoid: true
 });
 
+
 module.exports = Product;
