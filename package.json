@@ -4,7 +4,7 @@
   "description": "Prueba de Api CRUD usando NodeJs Express",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon server.js"
+    "dev": "nodemon index.js"
   },
   "author": "chris",
   "license": "ISC",

@@ -1,7 +1,6 @@
 const sequelize = require('../../db.js');
-const Purchase = require('../model/Purchase');
-const Product = require('../model/Product');
-const DetailPurchase = require('../model/DetailPurchase');
+const Purchase = require('../models/purchase.model.js');
+const DetailPurchase = require('../models/detailPurchase.model.js');
 
 exports.getAllPurchases = async (req, res) => {
     try {
@@ -11,7 +10,7 @@ exports.getAllPurchases = async (req, res) => {
       res.status(500).send({ message: 'Error al obtener las compras', error: err });
     }
   };
-  
+
   exports.getPurchaseById = async (req, res) => {
     const { id } = req.params;
   
@@ -30,26 +29,26 @@ exports.getAllPurchases = async (req, res) => {
 
   exports.createPurchase = async (req, res) => {
     const { products } = req.body;
-  
+
     // Calcula el total de la compra
     const total = products.reduce((sum, product) => sum + product.price * product.quantity, 0);
-  
+
     try {
       const purchase = await sequelize.transaction(async (t) => {
         const newPurchase = await Purchase.create({ total }, { transaction: t });
-  
+
         const details = products.map((product) => ({
           purchaseId: newPurchase.id,
           productId: product.productId,
           quantity: product.quantity,
           price: product.price,
         }));
-  
+
         await DetailPurchase.bulkCreate(details, { transaction: t });
-  
+
         return newPurchase;
       });
-  
+
       res.status(201).send(purchase);
     } catch (err) {
       res.status(500).send({ message: 'Error al realizar la compra', error: err });

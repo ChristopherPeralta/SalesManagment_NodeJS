@@ -1,7 +1,13 @@
-const { Sequelize, DataTypes } = require('sequelize');
+const { DataTypes } = require('sequelize');
 const sequelize = require('../../db.js')
 
 const Employee = sequelize.define('Employee', {
+    id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        allowNull: false,
+        primaryKey: true
+    },
     name: {
         type: DataTypes.STRING,
         allowNull: false
@@ -24,7 +30,3 @@ const Employee = sequelize.define('Employee', {
 });
 
 module.exports = Employee;
-
-sequelize.sync()
-  .then(() => console.log('Tablas creadas'))
-  .catch(error => console.log('Error al crear las tablas:', error));

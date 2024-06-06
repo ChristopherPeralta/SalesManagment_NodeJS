@@ -1,5 +1,5 @@
-const Product = require('./Product');
-const Category = require('./Category');
+const Product = require('./product.model');
+const Category = require('./category.model');
 
 Product.belongsTo(Category, {
     foreignKey: 'categoryId',
