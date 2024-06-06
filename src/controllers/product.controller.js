@@ -20,7 +20,7 @@ exports.getAllProducts = async (req, res) => {
         // Mapear sobre los productos y crear un nuevo objeto para cada uno
         const response = products.map(buildProductResponse);
 
-        res.json(response);
+        res.status(200).json(response);
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: 'Error al obtener los productos', error });
