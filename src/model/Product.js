@@ -3,6 +3,12 @@ const sequelize = require('../../db.js');
 const Category = require('./Category');
 
 const Product = sequelize.define('Product', {
+    id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        allowNull: false,
+        primaryKey: true
+      },
     name: {
         type: DataTypes.STRING,
         allowNull: false
@@ -11,12 +17,18 @@ const Product = sequelize.define('Product', {
         type: DataTypes.FLOAT,
         allowNull: false
     },
+    stock: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
     categoryId: {
         type: DataTypes.INTEGER,
+        allowNull: false,
         references: {
             model: 'Categories', // 'Categories' se refiere al nombre de la tabla, no al modelo
-            key: 'id'
+            key: 'id',
         }
+        
     }
 }, {
     paranoid: true

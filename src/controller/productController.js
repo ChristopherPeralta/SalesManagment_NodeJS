@@ -5,7 +5,7 @@ const { buildProductResponse } = require('../dto/productResponse');
 exports.getAllProducts = async (req, res) => {
     try {
         const products = await Product.findAll({
-            attributes: ['id', 'name', 'price', 'createdAt', 'updatedAt', 'deletedAt'],
+            attributes: ['id', 'name', 'price', 'stock', 'createdAt', 'updatedAt', 'deletedAt'],
             include: [{
                 model: Category,
                 as: 'category',
@@ -32,7 +32,7 @@ exports.getProductById = async (req, res) => {
         const id = req.params.id; // Aquí es donde obtienes el id del producto
 
         const product = await Product.findByPk(id, {
-            attributes: ['id', 'name', 'price', 'createdAt', 'updatedAt', 'deletedAt'], // Incluye solo estos campos
+            attributes: ['id', 'name', 'price', 'stock', 'createdAt', 'updatedAt', 'deletedAt'], // Incluye solo estos campos
             include: [{
                 model: Category,
                 as: 'category',
