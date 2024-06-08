@@ -62,15 +62,34 @@ exports.getProductById = async (req, res) => {
 };
 
 exports.createProduct = async (req, res) => {
+    const { name, price, categoryId } = req.body;
+    const stock = 0; // Establecer el stock en 0, independientemente de lo que se haya proporcionado
+
     try {
-        const product = await Product.create(req.body);
+        const category = await Category.findOne({
+            where: { id: categoryId },
+            paranoid: false
+        });
+
+        if (!category) {
+            return res.status(404).json({ message: 'Categoría no encontrada' });
+        }
+
+        if (category.deletedAt) {
+            return res.status(400).json({ message: 'No se puede crear un producto con una categoría eliminada' });
+        }
+
+        const product = await Product.create({
+            name,
+            price,
+            stock,
+            categoryId
+        });
+
         res.status(201).json(product);
     } catch (error) {
         console.error(error);
-        if (error instanceof Sequelize.ValidationError) {
-            return res.status(400).json({ message: 'Error de validación', errors: error.errors });
-        }
-        res.status(500).json({ message: 'Error interno del servidor', error: error.message });
+        res.status(500).json({ message: 'Error al crear el producto', error: error.message });
     }
 };
 
