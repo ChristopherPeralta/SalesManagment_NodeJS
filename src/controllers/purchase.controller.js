@@ -54,13 +54,36 @@ exports.createPurchase = async (req, res) => {
           price: product.price,
         }));
 
-        //Actualiza el stock del producto segun la cantidad comprada
-        for (const detail of details) {
-          const product = await Product.findByPk(detail.productId, { transaction: t });
-          if (product) {
-            await product.increment('stock', { by: detail.quantity, transaction: t });
-          }
+        // Actualiza el stock del producto y el costo promedio según la cantidad comprada
+      for (const detail of details) {
+        const product = await Product.findByPk(detail.productId, { transaction: t });
+        if (product) {
+          // Actualiza el purchasePrice del producto
+          product.purchasePrice = detail.price;
+
+          // Calcula el costo total del stock actual
+          const currentTotalCost = product.averageCost * product.stock;
+
+          // Calcula el costo total de los productos comprados
+          const purchaseTotalCost = detail.price * detail.quantity;
+
+          // Calcula el nuevo costo total
+          const newTotalCost = currentTotalCost + purchaseTotalCost;
+
+          // Calcula el nuevo stock
+          const newStock = product.stock + detail.quantity;
+
+          // Calcula el nuevo costo promedio
+          const newAverageCost = newTotalCost / newStock;
+
+          // Actualiza el stock y el costo promedio del producto
+          product.stock = newStock;
+          product.averageCost = newAverageCost;
+
+          // Guarda los cambios en la base de datos
+          await product.save();
         }
+      }
 //
         await DetailPurchase.bulkCreate(details, { transaction: t });
 
@@ -73,17 +96,53 @@ exports.createPurchase = async (req, res) => {
     }
   };
 
-exports.deletePurchase = async (req, res) => {
+  exports.deletePurchase = async (req, res) => {
     const { id } = req.params;
   
     try {
-      const purchase = await Purchase.findByPk(id);
+      const purchase = await sequelize.transaction(async (t) => {
+        const existingPurchase = await Purchase.findByPk(id, { transaction: t });
   
-      if (!purchase) {
-        return res.status(404).send({ message: 'Compra no encontrada' });
-      }
+        if (!existingPurchase) {
+          return res.status(404).json({ message: 'Compra no encontrada' });
+        }
   
-      await purchase.destroy();
+        const details = await DetailPurchase.findAll({ where: { purchaseId: id }, transaction: t });
+  
+        // Actualiza el stock del producto y el costo promedio según la cantidad comprada
+        for (const detail of details) {
+          const product = await Product.findByPk(detail.productId, { transaction: t });
+  
+          if (product) {
+            // Calcula el costo total del stock actual
+            const currentTotalCost = product.averageCost * product.stock;
+  
+            // Calcula el costo total de los productos devueltos
+            const returnTotalCost = detail.price * detail.quantity;
+  
+            // Calcula el nuevo costo total
+            const newTotalCost = currentTotalCost - returnTotalCost;
+  
+            // Calcula el nuevo stock
+            const newStock = product.stock - detail.quantity;
+  
+            // Calcula el nuevo costo promedio
+            const newAverageCost = newStock > 0 ? newTotalCost / newStock : 0;
+  
+            // Actualiza el stock y el costo promedio del producto
+            product.stock = newStock;
+            product.averageCost = newAverageCost;
+  
+            // Guarda los cambios en la base de datos
+            await product.save();
+          }
+        }
+  
+        await existingPurchase.destroy({ transaction: t });
+  
+        return existingPurchase;
+      });
+  
       res.status(200).send({ message: 'Compra eliminada con éxito' });
     } catch (err) {
       res.status(500).send({ message: 'Error al eliminar la compra', error: err });
