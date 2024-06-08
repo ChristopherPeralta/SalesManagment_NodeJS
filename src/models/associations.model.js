@@ -1,5 +1,6 @@
 const Product = require('./product.model');
 const Category = require('./category.model');
+const Purchase = require('./purchase.model');
 const DetailPurchase = require('./detailPurchase.model');
 
 //PRODUCT - CATEGORY
@@ -21,5 +22,16 @@ DetailPurchase.belongsTo(Product, {
 
 Product.hasMany(DetailPurchase, { 
     foreignKey: 'productId', 
+    as: 'detailPurchases' 
+});
+
+//detailPurchase Purchase
+DetailPurchase.belongsTo(Purchase, { 
+    foreignKey: 'purchaseId', 
+    as: 'purchase' 
+});
+
+Purchase.hasMany(DetailPurchase, { 
+    foreignKey: 'purchaseId', 
     as: 'detailPurchases' 
 });

@@ -1,12 +1,16 @@
 exports.buildDetailPurchaseResponse = function(detail) {
     return {
-        id: detail.id,
+        
+        purchase: {
+            id: detail.id,
+            total: detail.purchase.total,
+        },
         product: {
         productId: detail.product.id,
         productName: detail.product.name,
         quantity: detail.quantity,
-        price: detail.product.price,
-        subtotal: detail.quantity * detail.product.price
+        price: detail.price,
+        subtotal: detail.quantity * detail.price
         }
     };
 }

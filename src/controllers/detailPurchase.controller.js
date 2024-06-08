@@ -1,4 +1,5 @@
 const DetailPurchase = require('../models/detailPurchase.model');
+const Purchase = require('../models/purchase.model');
 const Product = require('../models/product.model');
 const { buildDetailPurchaseResponse } = require('../dto/detailPurchaseResponse');
 
@@ -12,9 +13,14 @@ exports.getDetailPurchase = async (req, res) => {
       },
       include: [
         {
+          model: Purchase,
+          as: 'purchase',
+          attributes: ['total'],
+        },
+        {
           model: Product,
           as: 'product',
-          attributes: ['id', 'name', 'price'],
+          attributes: ['id', 'name'],
         },
       ],
     });
