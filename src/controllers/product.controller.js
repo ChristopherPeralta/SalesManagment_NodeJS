@@ -2,10 +2,12 @@ const Product = require('../models/product.model');
 const Category = require('../models/category.model');
 const { buildProductResponse } = require('../dto/productResponse');
 
+const productAttributes = ['id', 'name', 'stock', 'price', 'purchasePrice', 'averageCost', 'createdAt', 'updatedAt', 'deletedAt'];
+
 exports.getAllProducts = async (req, res) => {
     try {
         const products = await Product.findAll({
-            attributes: ['id', 'name', 'price', 'stock', 'createdAt', 'updatedAt', 'deletedAt'],
+            attributes: productAttributes,
             include: [{
                 model: Category,
                 as: 'category',
@@ -33,7 +35,7 @@ exports.getProductById = async (req, res) => {
 
         const product = await Product.findByPk(id, {
             paranoid: false,
-            attributes: ['id', 'name', 'price', 'stock', 'createdAt', 'updatedAt', 'deletedAt'],
+            attributes: productAttributes,
             include: [{
                 model: Category,
                 as: 'category',
@@ -64,6 +66,8 @@ exports.getProductById = async (req, res) => {
 exports.createProduct = async (req, res) => {
     const { name, price, categoryId } = req.body;
     const stock = 0; // Establecer el stock en 0, independientemente de lo que se haya proporcionado
+    const purchasePrice = 0;
+    const averageCost = 0;
 
     try {
         const category = await Category.findOne({
@@ -83,6 +87,8 @@ exports.createProduct = async (req, res) => {
             name,
             price,
             stock,
+            purchasePrice,
+            averageCost,
             categoryId
         });
 
@@ -141,7 +147,7 @@ exports.getDeletedProducts = async (req, res) => {
     try {
         const products = await Product.findAll({ 
             paranoid: false, 
-            attributes: ['id', 'name', 'price', 'stock', 'createdAt', 'updatedAt', 'deletedAt'],
+            attributes: productAttributes,
             include: [{
                 model: Category,
                 as: 'category',
@@ -171,7 +177,7 @@ exports.findByDeletedCategory = async (req, res) => {
                 required: false
             }],
             where: { '$category.id$': null },
-            attributes: ['id', 'name', 'price', 'stock', 'createdAt', 'updatedAt', 'deletedAt']
+            attributes: productAttributes,
         });
 
         if (products.length === 0) {
