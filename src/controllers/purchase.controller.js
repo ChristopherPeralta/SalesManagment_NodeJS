@@ -54,9 +54,17 @@ exports.createPurchase = async (req, res) => {
           price: product.price,
         }));
 
-        // Actualiza el stock del producto y el costo promedio según la cantidad comprada
+
+      // Actualiza el stock del producto y el costo promedio según la cantidad comprada
       for (const detail of details) {
-        const product = await Product.findByPk(detail.productId, { transaction: t });
+        const product = await Product.findOne({ where: { id: detail.productId }, paranoid: false, transaction: t });
+
+        // Si el producto no existe o ha sido eliminado, lanza un error
+        if (!product || product.deletedAt) {
+          throw new Error(`El producto con id ${detail.productId} no existe o ha sido eliminado.`);
+        }
+
+        // Si el producto existe
         if (product) {
           // Actualiza el purchasePrice del producto
           product.purchasePrice = detail.price;
@@ -84,7 +92,6 @@ exports.createPurchase = async (req, res) => {
           await product.save();
         }
       }
-//
         await DetailPurchase.bulkCreate(details, { transaction: t });
 
         return newPurchase;
@@ -93,6 +100,42 @@ exports.createPurchase = async (req, res) => {
       res.status(201).send(purchase);
     } catch (err) {
       res.status(500).send({ message: 'Error al realizar la compra', error: err });
+    }
+  };
+
+  exports.createPurchase = async (req, res) => {
+    const { products } = req.body;
+  
+    // Calcula el total de la compra
+    const total = products.reduce((sum, product) => sum + product.price * product.quantity, 0);
+  
+    try {
+      const purchase = await sequelize.transaction(async (t) => {
+        const newPurchase = await Purchase.create({ total }, { transaction: t });
+  
+        const details = products.map((product) => ({
+          purchaseId: newPurchase.id,
+          productId: product.productId,
+          quantity: product.quantity,
+          price: product.price,
+        }));
+  
+        // Actualiza el stock del producto y el costo promedio según la cantidad comprada
+        for (const detail of details) {
+          const product = await Product.findOne({ where: { id: detail.productId }, paranoid: false, transaction: t });
+          if (!product || product.deletedAt) {
+            throw new Error(`El producto con id ${detail.productId} no existe o ha sido eliminado.`);
+          }
+  
+          // Resto del código...
+        }
+  
+        // Resto del código...
+      });
+  
+      // Resto del código...
+    } catch (err) {
+      res.status(500).send({ message: err.message });
     }
   };
 
