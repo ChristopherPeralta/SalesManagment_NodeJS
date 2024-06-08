@@ -11,11 +11,6 @@ const Purchase = sequelize.define('Purchase', {
   total: {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: false
-  },
-  date: {
-    type: DataTypes.DATE,
-    allowNull: false,
-    defaultValue: Sequelize.NOW
   }
 }, {
   paranoid: true,

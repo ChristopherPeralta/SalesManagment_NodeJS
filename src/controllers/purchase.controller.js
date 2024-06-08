@@ -1,4 +1,5 @@
 const sequelize = require('../../db.js');
+const { Op } = require('sequelize');
 const Purchase = require('../models/purchase.model.js');
 const DetailPurchase = require('../models/detailPurchase.model.js');
 const Product = require('../models/product.model');
@@ -16,19 +17,27 @@ exports.getAllPurchases = async (req, res) => {
     const { id } = req.params;
   
     try {
-      const purchase = await Purchase.findByPk(id);
-  
-      if (!purchase) {
-        return res.status(404).send({ message: 'Compra no encontrada' });
-      }
-  
-      res.status(200).send(purchase);
-    } catch (err) {
-      res.status(500).send({ message: 'Error al obtener la compra', error: err });
-    }
-  };
+      const purchase = await Purchase.findOne({
+          where: { id },
+          paranoid: false
+      });
 
-  exports.createPurchase = async (req, res) => {
+      if (!purchase) {
+          return res.status(404).json({ message: 'Compra no encontrada' });
+      }
+
+      if (purchase.deletedAt) {
+          return res.json({ message: 'Esta compra fue eliminada', purchase });
+      }
+
+      res.json(purchase);
+  } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Error al obtener la compra', error: error.message });
+  }
+};
+
+exports.createPurchase = async (req, res) => {
     const { products } = req.body;
 
     // Calcula el total de la compra
@@ -80,4 +89,24 @@ exports.deletePurchase = async (req, res) => {
       res.status(500).send({ message: 'Error al eliminar la compra', error: err });
     }
   };
+
+
+
+exports.getDeletedPurchases = async (req, res) => {
+    try {
+        const purchases = await Purchase.findAll({
+          where: { deletedAt: { [Op.ne]: null } },
+          paranoid: false
+    });
+
+        if (purchases.length === 0) {
+            return res.status(404).json({ message: 'No se encontraron compras eliminadas' });
+        }
+
+        res.json(purchases);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al obtener las compras eliminadas', error: error.message });
+    }
+};
 
