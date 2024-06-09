@@ -1,193 +1,153 @@
 const Product = require('../models/product.model');
 const Category = require('../models/category.model');
 const { buildProductResponse } = require('../dto/productResponse');
+const handleDatabaseOperation = require('../middlewares/errorHandler.js');
 
 const productAttributes = ['id', 'name', 'stock', 'price', 'purchasePrice', 'averageCost', 'createdAt', 'updatedAt', 'deletedAt'];
 
-exports.getAllProducts = async (req, res) => {
-    try {
-        const products = await Product.findAll({
-            attributes: productAttributes,
-            include: [{
-                model: Category,
-                as: 'category',
-                attributes: ['id', 'name']
-            }]
-        });
+exports.getAllProducts = handleDatabaseOperation(async (req, res) => {
+    const products = await Product.findAll({
+        attributes: productAttributes,
+        include: [{
+            model: Category,
+            as: 'category',
+            attributes: ['id', 'name']
+        }]
+    });
 
-        if (!products) {
-            return res.status(404).json({ message: 'No se encontraron productos' });
-        }
-
-        // Mapear sobre los productos y crear un nuevo objeto para cada uno
-        const response = products.map(buildProductResponse);
-
-        res.status(200).json(response);
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({ message: 'Error al obtener los productos', error });
+    if (!products) {
+        return res.status(404).json({ message: 'No se encontraron productos' });
     }
-};
 
-exports.getProductById = async (req, res) => {
-    try {
-        const id = req.params.id;
+    // Mapear sobre los productos y crear un nuevo objeto para cada uno
+    const response = products.map(buildProductResponse);
 
-        const product = await Product.findByPk(id, {
-            paranoid: false,
-            attributes: productAttributes,
-            include: [{
-                model: Category,
-                as: 'category',
-                attributes: ['id', 'name']
-            }]
-        });
+    res.status(200).json(response);
+});
 
-        if (!product) {
-            return res.status(404).json({ message: `Producto con ID ${id} no encontrado` });
-        }
+exports.getProductById = handleDatabaseOperation(async (req, res) => {
+    const id = req.params.id;
 
-        if (product.deletedAt) {
-            return res.status(410).json({ message: 'This product was deleted', product });
-        }
+    const product = await Product.findByPk(id, {
+        paranoid: false,
+        attributes: productAttributes,
+        include: [{
+            model: Category,
+            as: 'category',
+            attributes: ['id', 'name']
+        }]
+    });
 
-        const response = buildProductResponse(product);
-
-        res.json(response);
-    } catch (error) {
-        console.error(error);
-        if (error instanceof Sequelize.ValidationError) {
-            return res.status(400).json({ message: 'Error de validación', errors: error.errors });
-        }
-        res.status(500).json({ message: 'Error interno del servidor', error: error.message });
+    if (!product) {
+        return res.status(404).json({ message: `Producto con ID ${id} no encontrado` });
     }
-};
 
-exports.createProduct = async (req, res) => {
+    if (product.deletedAt) {
+        return res.status(410).json({ message: 'This product was deleted', product });
+    }
+
+    const response = buildProductResponse(product);
+
+    res.json(response);
+});
+
+exports.createProduct = handleDatabaseOperation(async (req, res) => {
     const { name, price, categoryId } = req.body;
     const stock = 0; // Establecer el stock en 0, independientemente de lo que se haya proporcionado
     const purchasePrice = 0;
     const averageCost = 0;
 
-    try {
-        const category = await Category.findOne({
-            where: { id: categoryId },
-            paranoid: false
-        });
+    const category = await Category.findOne({
+        where: { id: categoryId },
+        paranoid: false
+    });
 
-        if (!category) {
-            return res.status(404).json({ message: 'Categoría no encontrada' });
-        }
-
-        if (category.deletedAt) {
-            return res.status(400).json({ message: 'No se puede crear un producto con una categoría eliminada' });
-        }
-
-        const product = await Product.create({
-            name,
-            price,
-            stock,
-            purchasePrice,
-            averageCost,
-            categoryId
-        });
-
-        res.status(201).json(product);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error al crear el producto', error: error.message });
+    if (!category) {
+        return res.status(404).json({ message: 'Categoría no encontrada' });
     }
-};
 
-exports.updateProduct = async (req, res) => {
-    try {
-        const product = await Product.findByPk(req.params.id);
-
-        if (!product) {
-            return res.status(404).json({ message: `Producto con ID ${req.params.id} no encontrado` });
-        }
-
-        await product.update(req.body);
-        res.json(product);
-    } catch (error) {
-        console.error(error);
-        if (error instanceof Sequelize.ValidationError) {
-            return res.status(400).json({ message: 'Error de validación', errors: error.errors });
-        }
-        res.status(500).json({ message: 'Error interno del servidor', error: error.message });
+    if (category.deletedAt) {
+        return res.status(400).json({ message: 'No se puede crear un producto con una categoría eliminada' });
     }
-};
 
-exports.deleteProduct = async (req, res) => {
-    try {
-        const product = await Product.findByPk(req.params.id);
+    const product = await Product.create({
+        name,
+        price,
+        stock,
+        purchasePrice,
+        averageCost,
+        categoryId
+    });
 
-        if (!product) {
-            return res.status(404).json({ message: `Producto con ID ${req.params.id} no encontrado` });
-        }
+    res.status(201).json(product);
+});
 
-        await product.destroy();
-        res.json({ message: 'Producto eliminado' });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error interno del servidor', error: error.message });
+exports.updateProduct = handleDatabaseOperation(async (req, res) => {
+    const product = await Product.findByPk(req.params.id);
+
+    if (!product) {
+        return res.status(404).json({ message: `Producto con ID ${req.params.id} no encontrado` });
     }
-};
 
-exports.restoreProduct = async (req, res) => {
+    await product.update(req.body);
+    res.json(product);
+});
+
+exports.deleteProduct = handleDatabaseOperation(async (req, res) => {
+    const product = await Product.findByPk(req.params.id);
+
+    if (!product) {
+        return res.status(404).json({ message: `Producto con ID ${req.params.id} no encontrado` });
+    }
+
+    await product.destroy();
+    res.json({ message: 'Producto eliminado' });
+});
+
+exports.restoreProduct = handleDatabaseOperation(async (req, res) => {
     const product = await Product.findOne({ where: { id: req.params.id }, paranoid: false });
     if (!product || !product.deletedAt) {
         return res.status(404).json({ message: 'Product not found' });
     }
     await product.restore();
     res.json({ message: 'Product restored', product });
-};
+});
 
-exports.getDeletedProducts = async (req, res) => {
-    try {
-        const products = await Product.findAll({ 
-            paranoid: false, 
-            attributes: productAttributes,
-            include: [{
-                model: Category,
-                as: 'category',
-                attributes: ['id', 'name']
-            }]
-        });
+exports.getDeletedProducts = handleDatabaseOperation(async (req, res) => {
+    const products = await Product.findAll({ 
+        paranoid: false, 
+        attributes: productAttributes,
+        include: [{
+            model: Category,
+            as: 'category',
+            attributes: ['id', 'name']
+        }]
+    });
 
-        const deletedProducts = products.filter(product => product.deletedAt);
+    const deletedProducts = products.filter(product => product.deletedAt);
 
-        if (deletedProducts.length === 0) {
-            return res.status(404).json({ message: 'No se encontraron productos eliminados' });
-        }
-
-        res.json(deletedProducts);
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({ message: 'Error al obtener los productos eliminados', error });
+    if (deletedProducts.length === 0) {
+        return res.status(404).json({ message: 'No se encontraron productos eliminados' });
     }
-};
 
-exports.findByDeletedCategory = async (req, res) => {
-    try {
-        const products = await Product.findAll({
-            include: [{
-                model: Category,
-                as: 'category',
-                required: false
-            }],
-            where: { '$category.id$': null },
-            attributes: productAttributes,
-        });
+    res.json(deletedProducts);
+});
 
-        if (products.length === 0) {
-            return res.status(404).json({ message: 'No se encontraron productos con categoría eliminada' });
-        }
+exports.findByDeletedCategory = handleDatabaseOperation(async (req, res) => {
+    const products = await Product.findAll({
+        include: [{
+            model: Category,
+            as: 'category',
+            required: false
+        }],
+        where: { '$category.id$': null },
+        attributes: productAttributes,
+    });
 
-        res.json(products);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error al obtener los productos con categoría eliminada', error: error.message });
+    if (products.length === 0) {
+        return res.status(404).json({ message: 'No se encontraron productos con categoría eliminada' });
     }
-};
+
+    res.json(products);
+});
 
