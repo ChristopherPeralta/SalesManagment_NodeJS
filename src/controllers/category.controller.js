@@ -59,6 +59,12 @@ exports.getDeletedCategories = handleDatabaseOperation(async (req, res) => {
     const categories = await Category.findAll({ 
         paranoid: false 
     });
+
     const deletedCategories = categories.filter(category => category.deletedAt);
+
+    if (deletedCategories.length === 0) {
+        return res.status(404).json({ message: 'No se encontraron categorias eliminadas' });
+    }
+
     res.json(deletedCategories);
 });
