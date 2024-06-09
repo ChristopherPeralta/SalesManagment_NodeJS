@@ -2,39 +2,41 @@ const DetailPurchase = require('../models/detailPurchase.model');
 const Purchase = require('../models/purchase.model');
 const Product = require('../models/product.model');
 const { buildDetailPurchaseResponse } = require('../dto/detailPurchaseResponse');
+const handleDatabaseOperation = require('../middlewares/errorHandler.js');
 
-exports.getDetailPurchase = async (req, res) => {
+exports.getDetailPurchase = handleDatabaseOperation(async (req, res) => {
   const { id } = req.params;
 
-  try {
-    const details = await DetailPurchase.findAll({
+  const details = await DetailPurchase.findAll({
       where: {
-        purchaseId: id,  // Filtra los detailPurchase por purchaseId
+          purchaseId: id,  // Filtra los detailPurchase por purchaseId
       },
       include: [
-        {
-          model: Purchase,
-          as: 'purchase',
-          attributes: ['total'],
-        },
-        {
-          model: Product,
-          as: 'product',
-          attributes: ['id', 'name'],
-        },
+          {
+              model: Purchase,
+              as: 'purchase',
+              attributes: ['total', 'deletedAt'],
+              paranoid: false,  // Incluye las compras eliminadas
+          },
+          {
+              model: Product,
+              as: 'product',
+              attributes: ['id', 'name'],
+          },
       ],
-    });
+  });
 
-    if (details.length > 0) {
-        const response = details.map(buildDetailPurchaseResponse);
+  if (details.length > 0) {
+      const response = details.map(buildDetailPurchaseResponse);
 
-        res.status(200).json(response);
+      // Verifica si la compra ha sido eliminada
+      if (details[0].purchase.deletedAt) {
+          res.status(200).json({ message: 'Esta compra fue eliminada', details: response });
+      } else {
+          res.status(200).json(response);
+      }
 
-    } else {
+  } else {
       res.status(404).send({ message: 'No se encontraron detalles para esta compra' });
-    }
-  } catch (err) {
-    console.log(err);
-    res.status(500).send({ message: 'Error al obtener los detalles de la compra', error: err });
   }
-};
+});
