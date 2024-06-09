@@ -82,7 +82,9 @@ exports.deletePurchase = handleDatabaseOperation(async (req, res) => {
       await updateProductStockAndCostOnDelete(detail, t);
     }
 
-    await existingPurchase.destroy({ transaction: t });
+    // Marcar la compra como eliminada
+    existingPurchase.deletedAt = new Date();
+    await existingPurchase.save({ transaction: t });
 
     return existingPurchase;
   });
@@ -102,3 +104,4 @@ exports.getDeletedPurchases = handleDatabaseOperation(async (req, res) => {
 
   res.json(purchases);
 });
+
