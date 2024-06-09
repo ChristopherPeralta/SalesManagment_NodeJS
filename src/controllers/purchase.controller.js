@@ -5,6 +5,7 @@ const { updateProductStockAndCost, updateProductStockAndCostOnDelete } = require
 const Purchase = require('../models/purchase.model.js');
 const DetailPurchase = require('../models/detailPurchase.model.js');
 const Product = require('../models/product.model');
+
 exports.getAllPurchases = handleDatabaseOperation(async (req, res) => {
   const purchases = await Purchase.findAll();
   res.status(200).send(purchases);
