@@ -3,3 +3,4 @@
 - express
 - mysql
 - sequelize
+- nodemon
