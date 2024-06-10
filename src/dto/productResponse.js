@@ -7,6 +7,7 @@ exports.buildProductResponse = function(product) {
         purchasePrice: product.purchasePrice,
         averageCost: product.averageCost,
         category: product.category,
+        brand: product.brand,
         createdAt: product.createdAt,
         updatedAt: product.updatedAt,
         deletedAt: product.deletedAt

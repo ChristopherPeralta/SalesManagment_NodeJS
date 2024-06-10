@@ -2,6 +2,7 @@ const express = require('express');
 const employeeRouter = require('./src/routes/employee.routes');
 const productRouter = require('./src/routes/product.routes');
 const categoryRouter = require('./src/routes/category.routes');
+const brandRouter = require('./src/routes/brand.routes');
 const purchaseRouter = require('./src/routes/purchase.routes');
 const detailPurchaseRouter = require('./src/routes/detailPurchase.routes');
 const saleRouter = require('./src/routes/sale.routes');
@@ -19,6 +20,7 @@ app.use('/purchase', purchaseRouter);
 app.use('/detailspurchase', detailPurchaseRouter);
 app.use('/sale', saleRouter);
 app.use('/detailssale', detailSaleRouter);
+app.use('/brand', brandRouter);
 
 module.exports = app;
 

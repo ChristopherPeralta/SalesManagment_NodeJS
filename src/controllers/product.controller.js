@@ -1,5 +1,6 @@
 const Product = require('../models/product.model');
 const Category = require('../models/category.model');
+const Brand = require('../models/brand.model');
 const { buildProductResponse } = require('../dto/productResponse');
 const handleDatabaseOperation = require('../middlewares/errorHandler.js');
 
@@ -8,11 +9,19 @@ const productAttributes = ['id', 'name', 'stock', 'price', 'purchasePrice', 'ave
 exports.getAllProducts = handleDatabaseOperation(async (req, res) => {
     const products = await Product.findAll({
         attributes: productAttributes,
-        include: [{
+        include: [
+            {
             model: Category,
             as: 'category',
             attributes: ['id', 'name']
-        }]
+            },
+            {
+            model: Brand,
+            as: 'brand',
+            attributes: ['id', 'name']
+            }
+        ]
+        
     });
 
     if (!products) {
@@ -52,7 +61,7 @@ exports.getProductById = handleDatabaseOperation(async (req, res) => {
 });
 
 exports.createProduct = handleDatabaseOperation(async (req, res) => {
-    const { name, price, categoryId } = req.body;
+    const { name, price, categoryId, brandId } = req.body;
     const stock = 0; // Establecer el stock en 0, independientemente de lo que se haya proporcionado
     const purchasePrice = 0;
     const averageCost = 0;
@@ -76,7 +85,8 @@ exports.createProduct = handleDatabaseOperation(async (req, res) => {
         stock,
         purchasePrice,
         averageCost,
-        categoryId
+        categoryId,
+        brandId
     });
 
     res.status(201).json(product);

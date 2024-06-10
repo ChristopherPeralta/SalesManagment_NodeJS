@@ -10,6 +10,7 @@ const Product = sequelize.define('Product', {
     },
     name: {
         type: DataTypes.STRING,
+        
         allowNull: false
     },
     purchasePrice: {
@@ -24,7 +25,6 @@ const Product = sequelize.define('Product', {
         type: DataTypes.FLOAT,
         allowNull: false
     },
-
     stock: {
         type: DataTypes.INTEGER,
         defaultValue: 0 
@@ -36,7 +36,15 @@ const Product = sequelize.define('Product', {
             model: 'Categories', // 'Categories' se refiere al nombre de la tabla, no al modelo
             key: 'id',
         }
-    }
+    }, 
+    brandId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'Brands', // 'Brands' se refiere al nombre de la tabla, no al modelo
+            key: 'id',
+        }
+    } 
 }, {
     paranoid: true
 });
