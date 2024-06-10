@@ -4,7 +4,7 @@ const Brand = require('../models/brand.model');
 const { buildProductResponse } = require('../dto/productResponse');
 const handleDatabaseOperation = require('../middlewares/errorHandler.js');
 
-const productAttributes = ['id', 'name', 'stock', 'price', 'purchasePrice', 'averageCost', 'createdAt', 'updatedAt', 'deletedAt'];
+const productAttributes = ['id', 'name', 'weight', 'unit', 'stock', 'price', 'purchasePrice', 'averageCost', 'createdAt', 'updatedAt', 'deletedAt'];
 
 exports.getAllProducts = handleDatabaseOperation(async (req, res) => {
     const products = await Product.findAll({
@@ -61,7 +61,7 @@ exports.getProductById = handleDatabaseOperation(async (req, res) => {
 });
 
 exports.createProduct = handleDatabaseOperation(async (req, res) => {
-    const { name, price, categoryId, brandId } = req.body;
+    const { name, price, weight, unit, categoryId, brandId } = req.body;
     const stock = 0; // Establecer el stock en 0, independientemente de lo que se haya proporcionado
     const purchasePrice = 0;
     const averageCost = 0;
@@ -82,6 +82,8 @@ exports.createProduct = handleDatabaseOperation(async (req, res) => {
     const product = await Product.create({
         name,
         price,
+        weight,
+        unit,
         stock,
         purchasePrice,
         averageCost,

@@ -29,6 +29,14 @@ const Product = sequelize.define('Product', {
         type: DataTypes.INTEGER,
         defaultValue: 0 
     },
+    weight: {
+        type: DataTypes.FLOAT,
+        allowNull: false
+    },
+    unit: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
     categoryId: {
         type: DataTypes.INTEGER,
         allowNull: false,
