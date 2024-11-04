@@ -7,5 +7,7 @@ router.get('/deleted', purchaseController.getDeletedPurchases);
 router.get('/', purchaseController.getAllPurchases);
 router.get('/:id', purchaseController.getPurchaseById);
 router.delete('/:id', purchaseController.deletePurchase);
+router.patch('/restore/:id', purchaseController.restorePurchase);
+
 
 module.exports = router;

@@ -40,11 +40,18 @@ exports.getProductById = handleDatabaseOperation(async (req, res) => {
     const product = await Product.findByPk(id, {
         paranoid: false,
         attributes: productAttributes,
-        include: [{
+        include: [
+            {
             model: Category,
             as: 'category',
             attributes: ['id', 'name']
-        }]
+            },
+            {
+            model: Brand,
+            as: 'brand',
+            attributes: ['id', 'name']
+            }
+        ]
     });
 
     if (!product) {
@@ -66,10 +73,16 @@ exports.createProduct = handleDatabaseOperation(async (req, res) => {
     const purchasePrice = 0;
     const averageCost = 0;
 
+    console.log('categoryId:', categoryId);
     const category = await Category.findOne({
         where: { id: categoryId },
         paranoid: false
     });
+
+    if (!categoryId || !brandId) {
+        console.error('categoryId o brandId son undefined');
+        return;
+      }
 
     if (!category) {
         return res.status(404).json({ message: 'Categoría no encontrada' });
@@ -129,11 +142,18 @@ exports.getDeletedProducts = handleDatabaseOperation(async (req, res) => {
     const products = await Product.findAll({ 
         paranoid: false, 
         attributes: productAttributes,
-        include: [{
+        include: [
+            {
             model: Category,
             as: 'category',
             attributes: ['id', 'name']
-        }]
+            },
+            {
+            model: Brand,
+            as: 'brand',
+            attributes: ['id', 'name']
+            }
+        ]
     });
 
     const deletedProducts = products.filter(product => product.deletedAt);
@@ -158,6 +178,33 @@ exports.findByDeletedCategory = handleDatabaseOperation(async (req, res) => {
 
     if (products.length === 0) {
         return res.status(404).json({ message: 'No se encontraron productos con categoría eliminada' });
+    }
+
+    res.json(products);
+});
+
+exports.getProductsByBrandAndCategory = handleDatabaseOperation(async (req, res) => {
+    const { brandId, categoryId } = req.query;
+
+    const products = await Product.findAll({
+        where: { brandId, categoryId },
+        attributes: productAttributes,
+        include: [
+            {
+            model: Category,
+            as: 'category',
+            attributes: ['id', 'name']
+            },
+            {
+            model: Brand,
+            as: 'brand',
+            attributes: ['id', 'name']
+            }
+        ]
+    });
+
+    if (products.length === 0) {
+        return res.status(404).json({ message: 'No se encontraron productos con la marca y categoría especificadas' });
     }
 
     res.json(products);

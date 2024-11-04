@@ -16,4 +16,6 @@ const Purchase = sequelize.define('Purchase', {
   paranoid: true,
 });
 
+
+
 module.exports = Purchase;

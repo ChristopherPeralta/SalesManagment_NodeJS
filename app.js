@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const employeeRouter = require('./src/routes/employee.routes');
 const productRouter = require('./src/routes/product.routes');
 const categoryRouter = require('./src/routes/category.routes');
@@ -12,6 +13,7 @@ require('./src/models/associations.model');
 
 const app = express();
 
+app.use(cors());
 app.use(express.json()); // para poder parsear JSON
 app.use('/employee', employeeRouter);
 app.use('/product', productRouter);

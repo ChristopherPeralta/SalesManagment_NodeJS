@@ -6,6 +6,7 @@ router.get('/', productController.getAllProducts);
 router.get('/deleted', productController.getDeletedProducts);
 router.get('/with-deleted-category', productController.findByDeletedCategory);
 router.get('/:id', productController.getProductById);
+router.get('/getProductsByBrandAndCategory', productController.getProductsByBrandAndCategory);
 router.post('/', productController.createProduct);
 router.put('/:id', productController.updateProduct);
 router.delete('/:id', productController.deleteProduct);

@@ -68,29 +68,41 @@ exports.createPurchase = handleDatabaseOperation(async (req, res) => {
 exports.deletePurchase = handleDatabaseOperation(async (req, res) => {
   const { id } = req.params;
 
-  const purchase = await sequelize.transaction(async (t) => {
-    const existingPurchase = await Purchase.findByPk(id, { transaction: t });
+  try {
+    const purchase = await sequelize.transaction(async (t) => {
+      const existingPurchase = await Purchase.findByPk(id, { transaction: t });
 
-    if (!existingPurchase) {
-      return res.status(404).json({ message: 'Compra no encontrada' });
-    }
+      if (!existingPurchase) {
+        return res.status(404).json({ message: 'Compra no encontrada' });
+      }
 
-    const details = await DetailPurchase.findAll({ where: { purchaseId: id }, transaction: t });
+      const details = await DetailPurchase.findAll({ where: { purchaseId: id }, transaction: t });
 
-    // Actualiza el stock del producto y el costo promedio según la cantidad comprada
+      // Actualiza el stock del producto y el costo promedio según la cantidad comprada
     for (const detail of details) {
       await updateProductStockAndCostOnDelete(detail, t);
     }
 
+    // Marcar los detalles de la compra como eliminados
+    for (const detail of details) {
+      detail.setDataValue('deletedAt', new Date());
+      await detail.save({ transaction: t });
+    }
+
     // Marcar la compra como eliminada
-    existingPurchase.deletedAt = new Date();
+    existingPurchase.setDataValue('deletedAt', new Date());
     await existingPurchase.save({ transaction: t });
 
-    return existingPurchase;
-  });
+return existingPurchase;
+    });
 
-  res.status(200).send({ message: 'Compra eliminada con éxito' });
+    res.status(200).send({ message: 'Compra eliminada con éxito' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error del servidor');
+  }
 });
+
 
 exports.getDeletedPurchases = handleDatabaseOperation(async (req, res) => {
   const purchases = await Purchase.findAll({
@@ -105,3 +117,66 @@ exports.getDeletedPurchases = handleDatabaseOperation(async (req, res) => {
   res.json(purchases);
 });
 
+exports.restorePurchase = handleDatabaseOperation(async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const purchase = await sequelize.transaction(async (t) => {
+      const existingPurchase = await Purchase.findByPk(id, {
+        include: [{ model: DetailPurchase, as: 'detailPurchases', paranoid: false }],
+        paranoid: false, // Incluir registros eliminados
+        transaction: t
+      });
+
+      if (!existingPurchase) {
+        return res.status(404).json({ message: 'Compra no encontrada' });
+      }
+
+      if (!existingPurchase.deletedAt) {
+        return res.status(400).json({ message: 'La compra no está eliminada' });
+      }
+
+      const details = existingPurchase.detailPurchases;
+
+      // Restaurar los detalles de la compra y actualizar el stock y precio medio del producto
+      for (const detail of details) {
+        detail.setDataValue('deletedAt', null);
+        await detail.save({ transaction: t });
+
+        // Obtener el producto asociado
+        const product = await Product.findByPk(detail.productId, { transaction: t });
+      
+        if (product) {
+          // Calcular el nuevo stock
+          const newStock = product.stock + detail.quantity;
+      
+          // Calcular el nuevo precio medio, asegurando que no resulte en NaN
+          let newAverageCost = product.averageCost;
+          if (newStock > 0) {
+            const totalCost = (product.averageCost * product.stock) + (detail.price * detail.quantity);
+            newAverageCost = totalCost / newStock;
+          } else {
+            newAverageCost = 0; // Si el nuevo stock es 0, el precio medio también debe ser 0
+          }
+      
+          // Actualizar el producto con los nuevos valores
+          product.stock = newStock;
+          product.averageCost = newAverageCost;
+      
+          await product.save({ transaction: t });
+        }
+      }
+      
+      // Restaurar la compra
+      existingPurchase.setDataValue('deletedAt', null);
+      await existingPurchase.save({ transaction: t });
+      
+      return existingPurchase;
+    });
+
+    res.status(200).send({ message: 'Compra restaurada con éxito' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error del servidor');
+  }
+});

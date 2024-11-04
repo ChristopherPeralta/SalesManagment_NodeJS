@@ -26,6 +26,8 @@ const DetailPurchase = sequelize.define('DetailPurchase', {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: false
   }
+}, {
+  paranoid: true,
 });
 
 module.exports = DetailPurchase;
